@@ -28,7 +28,6 @@ abstract public class StatisticFetcher {
         this._trial   = context.trial();
         this._scheme  = scheme;
 
-
         String currDateTimeStr = LocalDate.now().toString() + "__";
         currDateTimeStr += LocalTime.now().getHour() + "_";
         currDateTimeStr += LocalTime.now().getMinute() + "_";

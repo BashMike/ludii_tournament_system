@@ -13,6 +13,7 @@ import java.util.ArrayList;
 
 public class BasicStatisticFetcher extends StatisticFetcher {
     // ================ ATTRIBUTES ================
+    private PrintWriter _globalCsvWriter;
     private PrintWriter _csvWriter;
 
     // ================ OPERATIONS ================
@@ -25,7 +26,10 @@ public class BasicStatisticFetcher extends StatisticFetcher {
             this._csvWriter = new PrintWriter(this._tournamentDirPath + "/" + this._scheme.getCurrBotGroupName() + "/game_statistics.csv", "UTF-8");
         }
         catch (Exception e) { System.out.println("Exception: " + e.getMessage()); e.printStackTrace(); }
-        this._csvWriter.println("trial_index,starter_bot_name,trial_moves_count,winner_bot_name");
+
+        this._csvWriter.print("match_name,round_index,round_moves_count,winner_bot_name");
+        for (int i=0; i<this._game.players().count(); i++) { this._csvWriter.print(",bot_" + (i+1)); }
+        this._csvWriter.println("");
     }
 
     @Override
@@ -40,17 +44,34 @@ public class BasicStatisticFetcher extends StatisticFetcher {
         }
         catch (Exception e) { System.out.println("Exception: " + e.getMessage()); e.printStackTrace(); }
 
-        this._csvWriter.print(roundIndex + "," + this._bots.get(1).id + "," + this._trial.numberRealMoves() + ",");
+        this._csvWriter.print(this._scheme.getCurrBotGroupName() + "," + roundIndex + "," + this._trial.numberRealMoves() + ",");
         int winnerBotIndex = 1;
         for (int i=1; i<this._bots.size(); i++) {
             if (this._trial.ranking()[i] == 1.0) { winnerBotIndex = i; break; }
         }
-        this._csvWriter.println(this._bots.get(winnerBotIndex).id);
+        this._csvWriter.print(this._bots.get(winnerBotIndex).id);
+        for (int i=1; i<this._bots.size(); i++) { this._csvWriter.print("," + this._bots.get(i).id); }
+        this._csvWriter.println("");
+
+        this._globalCsvWriter.print(this._scheme.getCurrBotGroupName() + "," + roundIndex + "," + this._trial.numberRealMoves() + "," + this._bots.get(winnerBotIndex).id);
+        for (int i=1; i<this._bots.size(); i++) { this._globalCsvWriter.print("," + this._bots.get(i).id); }
+        this._globalCsvWriter.println("");
     }
 
     @Override
-    public void performGlobalBeginFetch() {}
+    public void performGlobalBeginFetch() {
+        this._globalCsvWriter = null;
+        try {
+            Files.createDirectories(Paths.get(this._tournamentDirPath));
+            this._globalCsvWriter = new PrintWriter(this._tournamentDirPath + "/global_game_statistics.csv", "UTF-8");
+        }
+        catch (Exception e) { System.out.println("Exception: " + e.getMessage()); e.printStackTrace(); }
+
+        this._globalCsvWriter.print("match_name,round_index,round_moves_count,winner_bot_name");
+        for (int i=0; i<this._game.players().count(); i++) { this._globalCsvWriter.print(",bot_" + (i+1)); }
+        this._globalCsvWriter.println("");
+    }
 
     @Override
-    public void performGlobalEndFetch() {}
+    public void performGlobalEndFetch() { this._globalCsvWriter.close(); }
 }
